@@ -2,6 +2,7 @@ const express = require("express")
 const zod = require("zod");
 const {User} = require("../db");
 const jwt = require("jsonwebtoken");
+const authMiddleware = require("../middleware");
 require('dotenv').config()
 const router = express.Router();
 
@@ -92,4 +93,64 @@ router.post("/signin",async (req,res) =>{
     })
 })
 
+
+// Update User Body Validation
+    const updateUserBody = zod.object({
+        password : zod.string().min(6),
+        firstName : zod.string(),
+        lastName : zod.string()
+    });
+
+    router.put('./updateUser',authMiddleware,async (req,res) => {
+        try{
+            const {success} = updateUserBody.safeParse(req.body);
+            if(!success){
+                return res.status(411).json({
+                    message:"Error while updating information"
+                })
+            } 
+
+            const updatedUser = await User.updateOne({ _id: req.userId }, req.body)
+            console.log(updatedUser)
+            
+            res.status(200).json({ 
+                message: 'Successfully Updated!' 
+            })
+        } catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Server Error" });
+        }
+    })
+
+
+    router.get("/bulk", async (req, res) => {
+        try{
+        const filter = req.query.filter || "";
+    
+        const users = await User.find({
+            $or: [{
+                firstName: {
+                    "$regex": filter
+                }
+            }, {
+                lastName: {
+                    "$regex": filter
+                }
+            }]
+        })
+    
+        res.json({
+            user: users.map(user => ({
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                _id: user._id
+            }))
+        })
+    }catch (error) {
+            console.log(error);
+            res.status(500).json({ message: "Internal Server Error" });
+        }
+    })
+    
 module.exports = router;
