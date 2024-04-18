@@ -1,6 +1,6 @@
 const express = require("express")
 const zod = require("zod");
-const {User} = require("../db");
+const {User,Account} = require("../db");
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../middleware");
 require('dotenv').config()
@@ -44,6 +44,11 @@ router.post("/signup",async (req,res) =>{
         lastName:req.body.lastName
     }) 
     const userId = user._id;
+
+    await Account.create({
+        userId,
+        balance: 1 + Math.random() * 10000
+    })
 
     const token = jwt.sign({
         userId
@@ -101,7 +106,7 @@ router.post("/signin",async (req,res) =>{
         lastName : zod.string()
     });
 
-    router.put('./updateUser',authMiddleware,async (req,res) => {
+    router.put('/updateUser',authMiddleware,async (req,res) => {
         try{
             const {success} = updateUserBody.safeParse(req.body);
             if(!success){
