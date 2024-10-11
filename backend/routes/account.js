@@ -46,8 +46,11 @@ const transferSchema = z.object({
         required_error: "Reciever is required",
         invalid_type_error: "Reciever must be a string",
     }).min(12).trim(),
-    amount: z.number().positive("Amount should be positive")
-})
+    amount: z.union([z.number(), z.string().transform(val => Number(val))])
+    .refine(val => !isNaN(val) && val > 0, {
+        message: "Amount should be a positive number"
+    })
+});
 router.post('/transfer', authMiddleware, async (req, res) => {
     // Starting a session
     const session = await mongoose.startSession();
