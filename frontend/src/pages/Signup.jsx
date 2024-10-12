@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { BottomWarning } from "../components/BottomWarning";
 import { Button } from "../components/Button";
 import { Heading } from "../components/Heading";
@@ -15,6 +15,13 @@ export const Signup = () => {
     const [error, setError] = useState("");  // Track errors
     const navigate = useNavigate();
 
+    useEffect(()=>{
+        const token = localStorage.getItem("token");
+        if(token){
+          navigate("/dashboard");
+        }
+      },[navigate])
+
     const handleSubmit = async () => {
         if (!firstName || !lastName || !username || !password) {
             setError("Please fill out all fields.");
@@ -29,6 +36,7 @@ export const Signup = () => {
                 password,
             });
             localStorage.setItem("token", response.data.token);
+            localStorage.setItem("username",`${response.data.firstName} ${response.data.lastName}`)
             navigate("/dashboard");
         } catch (err) {
             setError("Signup failed. Please try again.");
